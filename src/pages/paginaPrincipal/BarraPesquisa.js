@@ -1,76 +1,54 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, SafeAreaView, Keyboard, Alert } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons'; // Certifique-se de importar corretamente
-import { useState } from 'react';
-import axios from 'axios';
+import { StyleSheet, TextInput, SafeAreaView, View, Keyboard, Alert } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-
-function BarraPesquisa({ setDestino }) {
+function BarraPesquisa({ setDestino, onDestinoAtualizado }) {
   const [text, setText] = useState("");
   const apiKey = 'AIzaSyBueXL8uHxfmt_X991-3c7hxhChCIgu30Q';
-
-  console.log('Endereço solicitado:', text);
-
+  const handleChangeDestino = (novoDestino) => {
+    setDestino(novoDestino);
+    onDestinoAtualizado();
+}
+  
   const solicitar = async () => {
     Keyboard.dismiss();
     
     if (!text.trim()) {
-      Alert.alert('Por favor, insira um endereço válido.')
+      Alert.alert('Por favor, insira um endereço válido.');
       return;
-  }
-  
-  
+    }
     
     try {
-      const resultados = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json`, {
-        params: {
-          address: text,
-          key: apiKey
-        }
-      });
+      const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${text}&key=${apiKey}`);
+      const resultados = await response.json();
 
-      console.log('Resultados da API:', resultados.data); 
+      console.log('Resultados da API:', resultados);
 
-      if (resultados.data.results && resultados.data.results.length > 0) {
-        console.log('Primeiro resultado:', resultados.data.results[0]); 
-        const location = resultados.data.results[0].geometry.location;
-        console.log("Resultados:", resultados.data)
+      if (resultados.results && resultados.results.length > 0) {
+        const location = resultados.results[0].geometry.location;
+
         console.log('Coordenadas do Destino:', {
           latitude: location.lat,
           longitude: location.lng,
         });
-
         setDestino({
           latitude: location.lat,
           longitude: location.lng,
         });
+        console.log("setDestino", setDestino)
         
-        const handleSearch = async (address) => {
-          const response = await fetch('https://maps.googleapis.com/maps/api/geocode/json');
-          const data = await response.json();
-      
-          if (data.status === "OK" && data.results.length > 0) {
-              const { lat, lng } = data.results[0].geometry.location;
-              setDestino({ latitude: lat, longitude: lng });
-              console.log("Destino atualizado no BarraPesquisa:", { latitude: lat, longitude: lng }); // Certifique-se de que isso aparece no log
-          }
-      };
 
-        console.log('Destino atualizado no BarraPesquisa:', {
-          latitude: location.lat,
-          longitude: location.lng,
-      });
-        
+        onDestinoAtualizado(); // adicionei isso aqui para chamar a função de atualização do mapa
       } else {
         console.log('Nenhum resultado encontrado');
+        Alert.alert('Nenhum resultado encontrado para o endereço informado.');
       }
     } catch (err) {
       console.log(err);
+      Alert.alert('Erro ao solicitar o endereço. Tente novamente.');
     }
-  }
-
-
+  };
 
   return (
     <SafeAreaView style={style.view}>
@@ -84,14 +62,14 @@ function BarraPesquisa({ setDestino }) {
           autoCapitalize='none'
           value={text}
           onChangeText={setText}
-          onSubmitEditing={solicitar }
+          onSubmitEditing={solicitar}
         /> 
 
         <Ionicons
           name='search'
-          size={40}
+          size={35}
           color='white'
-          onPress={ solicitar }
+          onPress={solicitar}
         />
       </View>  
     </SafeAreaView>
@@ -114,11 +92,11 @@ const style = StyleSheet.create({
     fontSize: 18,
     paddingLeft: 10,
     paddingRight: 10,
-    marginLeft: 10
+    marginLeft: 10,
   },
   view: {
-    marginTop: StatusBar.currentHeight
-  }
+    marginTop: StatusBar.currentHeight,
+  },
 });
 
 export default BarraPesquisa;

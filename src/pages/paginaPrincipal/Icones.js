@@ -28,6 +28,7 @@ function Icones(){
                 size={70}
                 onPress={() => navigation.navigate('Feedback')} 
                 style ={style.onibus}
+                
             />
             <FontAwesome
                 name="calendar-check-o"

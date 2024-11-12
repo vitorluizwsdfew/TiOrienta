@@ -1,19 +1,30 @@
 
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import BarraPesquisa from './BarraPesquisa';
+
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 
-import Icones from './Icones';
 
-import COP30 from './COP30';
 
 function Feedback(){
     return(
-        <View>
-           <Text>Olá</Text> 
+        <View style={style.container}>
+          <View style={style.top}>
+            
+          </View>
         </View>
     )
 }
+
+const style = StyleSheet.create({
+    container:{
+        backgroundColor: '#E6F0FF',
+        flex:1,
+    },
+    top:{
+        backgroundColor: '005EEB',
+        flex:1
+    }
+});
 export default Feedback;

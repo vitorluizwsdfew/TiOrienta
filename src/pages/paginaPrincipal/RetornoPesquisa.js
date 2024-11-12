@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
-import BarraPesquisa from './BarraPesquisa'; 
+import BarraPesquisa from './BarraPesquisa'; // Certifique-se de importar a BarraPesquisa
 
 const TelaMapa = () => {
     const [regiao, setRegiao] = useState(null);
@@ -10,10 +10,37 @@ const TelaMapa = () => {
     const [userLocation, setUserLocation] = useState(null);
     const [rotaCoord, setRotaCoord] = useState([]);
 
-    useEffect(() => {
-        console.log("Destino atualizado:", Destino);
+    const fetchRoute = async () => {
+        const origin = `${userLocation.latitude},${userLocation.longitude}`;
+        const dest = `${Destino.latitude},${Destino.longitude}`;
 
+        const apiKey = 'AIzaSyBueXL8uHxfmt_X991-3c7hxhChCIgu30Q'; 
+        
+        try {
+            
+            const response = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${dest}&key=${apiKey}`);
+            const data = await response.json();
+            console.log("OLaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+
+            if (data.routes.length > 0) {
+                const points = decodePolyline(data.routes[0].overview_polyline.points);
+                setRotaCoord(points);
+                
+            } else {
+                Alert.alert('Rota não encontrada', 'Não foi possível encontrar uma rota para o destino informado.');
+            }
+        } catch (error) {
+            Alert.alert('Erro', 'Não foi possível buscar a rota. Tente novamente.');
+        }
+    };
+
+
+    useEffect(() => {
         const getLocation = async () => {
+            
+            console.log("verificando userLocation e destino")
+            console.log("UserLocation", userLocation)
+            console.log("Destino", Destino)
             const { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 Alert.alert('Permissão de localização necessária!', 'Por favor, permita o acesso à sua localização.');
@@ -34,59 +61,27 @@ const TelaMapa = () => {
         };
 
         getLocation();
-    }, []);
-    console.log('User Location', userLocation);
-    console.log("Destino", Destino);
+    }, []); 
+
     
     useEffect(() => {
-        if (userLocation) {
-            console.log("Localização do usuário:", userLocation); // Log para verificar a localização do usuário
-        } else {
-            console.log("Localização do usuário não definida.");
-        }
-    
-        if (Destino) {
-            console.log("Destino:", Destino); // Log para verificar o destino
-        } else {
-            console.log("Destino não definido.");
-        }
         if (userLocation && Destino.latitude !== undefined && Destino.longitude !== undefined) {
-            console.log("Destino atualizado no useEffect:", Destino); // Log para verificar
-
-            fetchRoute();
+            console.log('Usuario:', userLocation)
+            console.log('Destino:', Destino)
             setRegiao({
                 latitude: Destino.latitude,
                 longitude: Destino.longitude,
                 latitudeDelta: 0.0922,
                 longitudeDelta: 0.0421,
-            });
+            }); 
+      
+            fetchRoute();
         }
-    }, [userLocation, Destino]);
-
-    const fetchRoute = async () => {
-        const origin = `${userLocation.latitude},${userLocation.longitude}`;
-        const dest = `${Destino.latitude},${Destino.longitude}`;
-        console.log("Variavel Dest", dest)
-        
-
-        const apiKey = 'AIzaSyA8JEEn9yvAytw0jK3FOrr6aCNoqbLZcmY'; // Adicionar a chave da API aqui lembrete
-        try {
-            const response = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${dest}&key=${apiKey}`);
-            const data = await response.json();
-
-            if (data.routes.length > 0) {
-                const points = decodePolyline(data.routes[0].overview_polyline.points);
-                setRotaCoord(points);
-            } else {
-                Alert.alert('Rota não encontrada', 'Não foi possível encontrar uma rota para o destino informado.');
-            }
-        } catch (error) {
-            Alert.alert('Erro', 'Não foi possível buscar a rota. Tente novamente.');
-        }
-
-    };
-
+    }, [userLocation, Destino]); 
+   
+  
     const decodePolyline = (t) => {
+        
         let points = [];
         let index = 0, len = t.length;
         let lat = 0, lng = 0;
@@ -126,7 +121,7 @@ const TelaMapa = () => {
 
     return (
         <View style={style.container}>
-            <MapView style={style.map} initialRegion={regiao}>
+            <MapView style={style.map} region={regiao}>
                 {userLocation && <Marker coordinate={userLocation} title='Você está aqui' />}
                 {Destino.latitude && Destino.longitude && <Marker coordinate={Destino} title='Destino' />}
                 <Polyline coordinates={rotaCoord} strokeWidth={5} strokeColor='blue' />
